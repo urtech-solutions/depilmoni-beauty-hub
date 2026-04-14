@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Layout from '@/components/layout/Layout';
 import { formatCurrency } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { products, formatCurrency, type Product } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { Animated, StaggerContainer, StaggerItem } from '@/components/animations/Animated';
+import { Animated, StaggerContainer } from '@/components/animations/Animated';
 import productCeraChocolate from '@/assets/product-cera-chocolate.jpg';
 import productTonico from '@/assets/product-tonico.jpg';
 import productDolomita from '@/assets/product-dolomita.jpg';
