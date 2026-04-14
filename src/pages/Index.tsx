@@ -6,16 +6,19 @@ import CategoryGrid from '@/components/blocks/CategoryGrid';
 import EventHighlight from '@/components/blocks/EventHighlight';
 import TestimonialSection from '@/components/blocks/TestimonialSection';
 import CTASection from '@/components/blocks/CTASection';
+import { PageTransition } from '@/components/animations/Animated';
 
 const Index = () => (
   <Layout>
-    <HeroBanner />
-    <BenefitBar />
-    <ProductCarousel />
-    <CategoryGrid />
-    <EventHighlight />
-    <TestimonialSection />
-    <CTASection />
+    <PageTransition>
+      <HeroBanner />
+      <BenefitBar />
+      <ProductCarousel />
+      <CategoryGrid />
+      <EventHighlight />
+      <TestimonialSection />
+      <CTASection />
+    </PageTransition>
   </Layout>
 );
 

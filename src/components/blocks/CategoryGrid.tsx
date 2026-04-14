@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Animated, StaggerContainer, StaggerItem } from '@/components/animations/Animated';
 
 const categories = [
   { name: 'Ceras', slug: '/produtos?cat=ceras', emoji: '🍫' },
@@ -11,26 +12,25 @@ const categories = [
 const CategoryGrid = () => (
   <section className="py-16 bg-secondary/30">
     <div className="container">
-      <h2 className="font-display text-3xl font-bold text-center mb-8">Categorias</h2>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {categories.map((cat, i) => (
-          <motion.div
-            key={cat.name}
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: i * 0.1 }}
-          >
-            <Link
-              to={cat.slug}
-              className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 transition-all hover:border-copper/40 hover:shadow-md"
-            >
-              <span className="text-4xl">{cat.emoji}</span>
-              <span className="font-display font-semibold text-lg">{cat.name}</span>
+      <Animated>
+        <h2 className="font-display text-3xl font-bold text-center mb-8">Categorias</h2>
+      </Animated>
+      <StaggerContainer className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {categories.map((cat) => (
+          <StaggerItem key={cat.name}>
+            <Link to={cat.slug}>
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 transition-shadow hover:shadow-md hover:border-copper/40"
+              >
+                <span className="text-4xl">{cat.emoji}</span>
+                <span className="font-display font-semibold text-lg">{cat.name}</span>
+              </motion.div>
             </Link>
-          </motion.div>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerContainer>
     </div>
   </section>
 );

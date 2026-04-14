@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
+import { Animated, StaggerContainer, StaggerItem } from '@/components/animations/Animated';
 
 const testimonials = [
   {
@@ -22,30 +23,31 @@ const testimonials = [
 const TestimonialSection = () => (
   <section className="py-16 bg-secondary/30">
     <div className="container">
-      <h2 className="font-display text-3xl font-bold text-center mb-10">O que dizem sobre nós</h2>
-      <div className="grid gap-6 md:grid-cols-3">
-        {testimonials.map((t, i) => (
-          <motion.div
-            key={t.name}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
-            className="rounded-xl border border-border bg-card p-6"
-          >
-            <div className="flex gap-1 mb-3">
-              {[...Array(5)].map((_, j) => (
-                <Star key={j} size={16} className="fill-gold text-gold" />
-              ))}
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground italic">"{t.text}"</p>
-            <div className="mt-4 pt-4 border-t border-border">
-              <p className="font-semibold text-sm">{t.name}</p>
-              <p className="text-xs text-copper">{t.role}</p>
-            </div>
-          </motion.div>
+      <Animated>
+        <h2 className="font-display text-3xl font-bold text-center mb-10">O que dizem sobre nós</h2>
+      </Animated>
+      <StaggerContainer className="grid gap-6 md:grid-cols-3">
+        {testimonials.map((t) => (
+          <StaggerItem key={t.name}>
+            <motion.div
+              whileHover={{ y: -4, boxShadow: '0 8px 30px -12px rgba(0,0,0,0.12)' }}
+              transition={{ duration: 0.25 }}
+              className="rounded-xl border border-border bg-card p-6"
+            >
+              <div className="flex gap-1 mb-3">
+                {[...Array(5)].map((_, j) => (
+                  <Star key={j} size={16} className="fill-gold text-gold" />
+                ))}
+              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground italic">"{t.text}"</p>
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="font-semibold text-sm">{t.name}</p>
+                <p className="text-xs text-copper">{t.role}</p>
+              </div>
+            </motion.div>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerContainer>
     </div>
   </section>
 );
