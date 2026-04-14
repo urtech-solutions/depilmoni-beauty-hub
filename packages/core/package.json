@@ -1,0 +1,26 @@
+{
+  "name": "@depilmoni/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "seed:print": "tsx src/infrastructure/seeds/print-seed.ts"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "qrcode": "^1.5.4",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "@types/qrcode": "^1.5.5",
+    "tsx": "^4.20.6",
+    "vitest": "^3.2.4"
+  }
+}

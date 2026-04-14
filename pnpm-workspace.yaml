@@ -1,0 +1,6 @@
+packages:
+  - apps/web
+  - apps/cms
+  - apps/commerce
+  - packages/core
+  - packages/ui
