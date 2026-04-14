@@ -18,7 +18,6 @@
     "autoprefixer": "^10.5.0",
     "lovable-tagger": "^1.1.13",
     "postcss": "^8.5.9",
-    "tailwindcss": "^4.2.2",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
