@@ -1,0 +1,83 @@
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { products, formatCurrency, type Product } from '@/lib/mock-data';
+import { Button } from '@/components/ui/button';
+import { Animated, StaggerContainer } from '@/components/animations/Animated';
+import productCeraChocolate from '@/assets/product-cera-chocolate.jpg';
+import productTonico from '@/assets/product-tonico.jpg';
+import productDolomita from '@/assets/product-dolomita.jpg';
+import productRollOn from '@/assets/product-roll-on.jpg';
+import productKit from '@/assets/product-kit.jpg';
+
+const productImages: Record<string, string> = {
+  '1': productCeraChocolate,
+  '2': productTonico,
+  '3': productDolomita,
+  '4': productRollOn,
+  '5': productKit,
+};
+
+export const ProductCard = ({ product }: { product: Product }) => (
+  <motion.div
+    variants={{
+      hidden: { opacity: 0, y: 24 },
+      visible: { opacity: 1, y: 0 },
+    }}
+    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    className="group"
+  >
+    <Link to={`/produtos/${product.slug}`} className="block">
+      <div className="aspect-square overflow-hidden rounded-lg bg-warm-beige">
+        <motion.img
+          whileHover={{ scale: 1.06 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          src={productImages[product.id]}
+          alt={product.name}
+          loading="lazy"
+          width={800}
+          height={800}
+          className="h-full w-full object-cover"
+        />
+      </div>
+      <div className="mt-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-copper">{product.category}</p>
+        <h3 className="mt-1 font-display text-lg font-semibold leading-tight">{product.name}</h3>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="font-semibold text-foreground">{formatCurrency(product.price)}</span>
+          {product.compareAtPrice && (
+            <span className="text-sm text-muted-foreground line-through">
+              {formatCurrency(product.compareAtPrice)}
+            </span>
+          )}
+        </div>
+      </div>
+    </Link>
+  </motion.div>
+);
+
+const ProductCarousel = () => {
+  const featured = products.filter((p) => p.featured);
+
+  return (
+    <section className="py-16">
+      <div className="container">
+        <Animated className="flex items-end justify-between mb-8">
+          <div>
+            <h2 className="font-display text-3xl font-bold">Destaques</h2>
+            <p className="mt-1 text-muted-foreground">Os produtos mais amados pelas nossas clientes</p>
+          </div>
+          <Link to="/produtos">
+            <Button variant="outline">Ver todos</Button>
+          </Link>
+        </Animated>
+        <StaggerContainer className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">
+          {featured.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </StaggerContainer>
+      </div>
+    </section>
+  );
+};
+
+export default ProductCarousel;
