@@ -21,6 +21,7 @@ export const Products: CollectionConfig = {
     { name: "category", type: "text", required: true },
     { name: "featured", type: "checkbox", defaultValue: false },
     { name: "isKit", type: "checkbox", defaultValue: false },
+    { name: "active", type: "checkbox", defaultValue: true },
     {
       name: "variants",
       type: "array",

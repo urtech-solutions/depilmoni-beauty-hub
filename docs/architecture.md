@@ -163,5 +163,6 @@ No dominio, `canAccess` permite reaproveitar a mesma leitura de papeis em outras
 
 ## Observacoes
 
-- `apps/cms` e `apps/commerce` estao preparados como base de integracao e governanca, mas o MVP funcional atual esta centralizado no `apps/web` + `packages/core`.
-- Existem diretorios legados no repositorio que nao fazem parte do workspace oficial atual.
+- `apps/cms` usa `Next.js` apenas como shell do admin do `Payload`. Ele nao deve ser tratado como uma segunda vitrine publica.
+- O storefront funcional e oficial do MVP esta centralizado em `apps/web` + `packages/core`.
+- A antiga vitrine `Vite + React Router`, antes alojada na raiz, foi movida para `legacy/root-storefront-vite` apenas como referencia de design e historico.

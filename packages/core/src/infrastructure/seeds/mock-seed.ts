@@ -228,7 +228,10 @@ export const createSeedData = (): MockDatabase => ({
       endsAt: tomorrow,
       active: true,
       applicableProductIds: ["product_cera_chocolate"],
-      applicableCategories: []
+      applicableCategories: [],
+      xpMultiplier: 2,
+      eligibleProfiles: [],
+      eligibleTags: []
     }
   ],
   coupons: [
@@ -242,7 +245,11 @@ export const createSeedData = (): MockDatabase => ({
       startsAt: now.toISOString(),
       endsAt: twoMonthsAhead,
       combinableWithPromotions: true,
-      combinableWithFidelity: true
+      combinableWithFidelity: true,
+      maxUses: 100,
+      currentUses: 0,
+      eligibleProfiles: [],
+      eligibleTags: []
     },
     {
       id: "coupon_frete50",
@@ -254,7 +261,11 @@ export const createSeedData = (): MockDatabase => ({
       startsAt: now.toISOString(),
       endsAt: nextMonth,
       combinableWithPromotions: true,
-      combinableWithFidelity: true
+      combinableWithFidelity: true,
+      maxUses: 50,
+      currentUses: 0,
+      eligibleProfiles: [],
+      eligibleTags: []
     }
   ],
   customerProfiles: [
@@ -262,43 +273,53 @@ export const createSeedData = (): MockDatabase => ({
       id: "customer_client_maria",
       name: "Maria Silva",
       email: "maria@depilmoni.test",
+      phone: "(11) 99999-0001",
+      cpf: "123.456.789-00",
       role: "authenticated-customer",
       profileType: "client",
+      distributorStatus: "none",
       tags: ["tag_profile_client", "tag_fidelity_signature"],
       fidelityTagIds: ["fidelity_signature"],
       xpBalance: 720,
       levelId: "xp_level_prata",
       benefitsUnlocked: ["5% em produtos selecionados", "frete gracioso acima de R$ 200"],
       orderIds: ["order_seed_001"],
-      ticketIds: ["ticket_seed_001"]
+      ticketIds: ["ticket_seed_001"],
+      createdAt: now.toISOString()
     },
     {
       id: "customer_partner_juliana",
       name: "Juliana Rocha",
       email: "juliana@depilmoni.test",
+      phone: "(11) 99999-0002",
       role: "authenticated-customer",
       profileType: "partner",
+      distributorStatus: "none",
       tags: ["tag_profile_partner"],
       fidelityTagIds: ["fidelity_signature"],
       xpBalance: 1240,
       levelId: "xp_level_prata",
       benefitsUnlocked: ["Tabela especial parceiro", "campanhas antecipadas"],
       orderIds: [],
-      ticketIds: []
+      ticketIds: [],
+      createdAt: now.toISOString()
     },
     {
       id: "customer_distributor_bella",
       name: "Bella Distribuicao",
       email: "distribuidor@depilmoni.test",
+      phone: "(11) 99999-0003",
       role: "authenticated-customer",
       profileType: "distributor",
+      distributorStatus: "approved",
       tags: ["tag_profile_distributor"],
       fidelityTagIds: ["fidelity_signature"],
       xpBalance: 2200,
       levelId: "xp_level_ouro",
       benefitsUnlocked: ["Tabela distribuidor", "pedido assistido"],
       orderIds: [],
-      ticketIds: []
+      ticketIds: [],
+      createdAt: now.toISOString()
     }
   ],
   customerTags: [
@@ -728,8 +749,32 @@ export const createSeedData = (): MockDatabase => ({
       couponDiscount: 0,
       shippingAmount: 18.9,
       total: 173.35,
+      paymentMethod: "credit-card" as const,
       xpEarned: 173,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
+    }
+  ],
+  addresses: [
+    {
+      id: "address_maria_casa",
+      customerId: "customer_client_maria",
+      label: "Casa",
+      recipientName: "Maria Silva",
+      street: "Rua das Flores",
+      number: "123",
+      neighborhood: "Jardim Botanico",
+      city: "Sao Paulo",
+      state: "SP",
+      zipCode: "01234-567",
+      isDefault: true,
+      latitude: -23.5505,
+      longitude: -46.6333,
       createdAt: now.toISOString()
     }
-  ]
+  ],
+  distributorRequests: [],
+  notifications: [],
+  inventoryMovements: [],
+  orderStatusHistory: []
 });

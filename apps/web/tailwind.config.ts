@@ -34,9 +34,17 @@ const config = {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))"
         },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))"
+        },
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))"
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))"
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -46,8 +54,16 @@ const config = {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))"
         },
-        gold: "var(--color-accent-gold)",
-        copper: "var(--color-accent-copper)"
+        gold: "hsl(var(--gold))",
+        copper: "hsl(var(--copper))",
+        chocolate: "hsl(var(--chocolate))",
+        cream: "hsl(var(--cream))",
+        "warm-beige": "hsl(var(--warm-beige))"
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)"
       },
       keyframes: {
         "accordion-down": {
@@ -62,16 +78,26 @@ const config = {
           from: { opacity: "0", transform: "translateY(24px)" },
           to: { opacity: "1", transform: "translateY(0)" }
         },
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to: { opacity: "1", transform: "translateY(0)" }
+        },
         glow: {
           "0%, 100%": { opacity: "0.55" },
           "50%": { opacity: "0.9" }
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" }
         }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-up": "fade-up 0.7s ease-out both",
-        glow: "glow 4s ease-in-out infinite"
+        "fade-in": "fade-in 0.6s ease-out forwards",
+        glow: "glow 4s ease-in-out infinite",
+        shimmer: "shimmer 2s linear infinite"
       }
     }
   },

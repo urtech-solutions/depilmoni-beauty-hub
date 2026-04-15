@@ -1,59 +1,102 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 import type { HeroBannerBlock as HeroBannerBlockProps } from "@depilmoni/core";
 import { Badge, Button } from "@depilmoni/ui";
 
+import { premiumEase } from "@/components/animations/animated";
+
 export const HeroBanner = ({ block }: { block: HeroBannerBlockProps }) => (
-  <section className="section-spacing pt-10">
-    <div className="container">
-      <div className="grid gap-8 overflow-hidden rounded-[36px] border border-border/70 bg-[rgba(255,250,245,0.7)] p-6 shadow-[0_34px_90px_-50px_rgba(84,46,28,0.45)] md:p-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-        <div className="relative z-10 space-y-6">
-          <Badge variant="accent">{block.eyebrow}</Badge>
-          <div className="space-y-4">
-            <h1 className="max-w-xl font-display text-5xl leading-[0.92] text-foreground md:text-6xl">
-              {block.title}
-            </h1>
-            <p className="max-w-2xl text-base leading-7 text-[var(--color-text-secondary)] md:text-lg">
-              {block.subtitle}
-            </p>
-          </div>
+  <section className="relative overflow-hidden">
+    <div className="absolute inset-0">
+      <motion.div
+        initial={{ scale: 1.1 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 1.4, ease: premiumEase }}
+        className="relative h-full w-full"
+      >
+        <Image src={block.image} alt={block.title} fill priority className="object-cover" />
+      </motion.div>
+      <div className="absolute inset-0 bg-gradient-to-r from-chocolate/85 via-chocolate/55 to-transparent" />
+    </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Button asChild variant="hero" size="lg">
-              <Link href={block.cta.href}>{block.cta.label}</Link>
+    <div className="container relative z-10 flex min-h-[480px] items-center py-20 md:min-h-[560px]">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.3, ease: premiumEase }}
+        className="max-w-xl"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.35, ease: premiumEase }}
+        >
+          <Badge variant="accent" className="border border-white/10 bg-white/10 text-cream">
+            {block.eyebrow}
+          </Badge>
+        </motion.div>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.45, ease: premiumEase }}
+          className="mt-5 font-display text-4xl font-bold leading-tight text-cream md:text-5xl lg:text-6xl"
+        >
+          {block.title}
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.6, ease: premiumEase }}
+          className="mt-4 text-base leading-relaxed text-cream/80 md:text-lg"
+        >
+          {block.subtitle}
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.75, ease: premiumEase }}
+          className="mt-8 flex flex-wrap gap-3"
+        >
+          <Button asChild variant="hero" size="lg">
+            <Link href={block.cta.href}>{block.cta.label}</Link>
+          </Button>
+          {block.secondaryCta ? (
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="border-white/20 text-cream hover:bg-white/10 hover:text-cream"
+            >
+              <Link href={block.secondaryCta.href}>{block.secondaryCta.label}</Link>
             </Button>
-            {block.secondaryCta ? (
-              <Button asChild variant="outline" size="lg">
-                <Link href={block.secondaryCta.href}>{block.secondaryCta.label}</Link>
-              </Button>
-            ) : null}
-          </div>
+          ) : null}
+        </motion.div>
 
-          <div className="flex flex-wrap gap-3 pt-2">
+        {block.ambienceNotes.length ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.9, ease: premiumEase }}
+            className="mt-6 flex flex-wrap gap-3"
+          >
             {block.ambienceNotes.map((item) => (
               <span
                 key={item}
-                className="rounded-full border border-[rgba(167,114,74,0.18)] bg-[rgba(255,250,245,0.72)] px-4 py-2 text-xs uppercase tracking-[0.24em] text-[var(--color-text-secondary)]"
+                className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.24em] text-cream/75"
               >
                 {item}
               </span>
             ))}
-          </div>
-        </div>
-
-        <div className="relative min-h-[360px] overflow-hidden rounded-[28px]">
-          <div className="absolute inset-0 animate-glow bg-[radial-gradient(circle_at_20%_10%,rgba(201,157,84,0.28),transparent_26%),radial-gradient(circle_at_80%_20%,rgba(167,114,74,0.28),transparent_26%)]" />
-          <Image
-            src={block.image}
-            alt={block.title}
-            fill
-            priority
-            className="rounded-[28px] object-cover"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(47,29,21,0.65),rgba(47,29,21,0.08)_45%,rgba(47,29,21,0.55))]" />
-        </div>
-      </div>
+          </motion.div>
+        ) : null}
+      </motion.div>
     </div>
   </section>
 );

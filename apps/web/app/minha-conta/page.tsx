@@ -1,4 +1,4 @@
-import { Ticket } from "lucide-react";
+import { Package, Ticket, User } from "lucide-react";
 
 import { Badge, Card } from "@depilmoni/ui";
 
@@ -6,32 +6,32 @@ import { XPProgressCard } from "@/components/account/xp-progress-card";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { storefrontData } from "@/lib/storefront";
 
+const profileLabelMap = {
+  client: "Cliente",
+  partner: "Parceiro",
+  distributor: "Distribuidor"
+} as const;
+
 export default function MyAccountPage() {
   const dashboard = storefrontData.customerDashboard();
   const orders = storefrontData.customerOrders();
   const tickets = storefrontData.customerTickets();
+  const hasFidelity = dashboard.customer.fidelityTagIds.length > 0;
 
   return (
     <section className="section-spacing">
-      <div className="container space-y-8">
-        <Card className="space-y-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.32em] text-[var(--color-accent-copper)]">
-                Portal do usuario
-              </p>
-              <h1 className="mt-3 font-display text-5xl">{dashboard.customer.name}</h1>
-              <p className="mt-2 text-base leading-7 text-muted-foreground">
-                Perfil {dashboard.customer.profileType} com fidelidade e beneficios configuraveis por nivel.
-              </p>
+      <div className="container mx-auto max-w-4xl space-y-6 py-4">
+        <Card className="border border-border bg-card p-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-copper/20">
+              <User size={24} className="text-copper" />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Badge>{dashboard.customer.profileType}</Badge>
-              {dashboard.customer.tags.map((tag) => (
-                <Badge key={tag} variant="accent">
-                  {tag}
-                </Badge>
-              ))}
+            <div>
+              <h1 className="font-display text-3xl font-bold">{dashboard.customer.name}</h1>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Badge>{profileLabelMap[dashboard.customer.profileType]}</Badge>
+                {hasFidelity ? <Badge variant="accent">Fidelidade</Badge> : null}
+              </div>
             </div>
           </div>
         </Card>
@@ -44,48 +44,44 @@ export default function MyAccountPage() {
         />
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="space-y-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.28em] text-[var(--color-accent-copper)]">
-                Pedidos
-              </p>
-              <h2 className="mt-2 font-display text-3xl">Historico recente</h2>
-            </div>
+          <Card className="space-y-4 border border-border bg-card p-6">
+            <h2 className="flex items-center gap-2 font-display font-semibold">
+              <Package size={18} className="text-copper" /> Meus Pedidos
+            </h2>
             <div className="space-y-3">
               {orders.map((order) => (
-                <div key={order.id} className="rounded-2xl border border-border/70 bg-background/70 p-4">
+                <div key={order.id} className="rounded-md border border-border p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="font-medium text-foreground">{order.code}</p>
-                      <p className="text-sm text-muted-foreground">{formatDate(order.createdAt)}</p>
+                      <p className="text-sm font-medium">{order.code}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
                     </div>
-                    <p className="font-semibold text-foreground">{formatCurrency(order.total)}</p>
+                    <div className="text-right">
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                        {order.status}
+                      </span>
+                      <p className="mt-1 text-sm font-semibold">{formatCurrency(order.total)}</p>
+                    </div>
                   </div>
-                  <p className="mt-2 text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                    XP gerado: {order.xpEarned}
-                  </p>
                 </div>
               ))}
             </div>
           </Card>
 
-          <Card className="space-y-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.28em] text-[var(--color-accent-copper)]">
-                Tickets
-              </p>
-              <h2 className="mt-2 font-display text-3xl">Ingressos ativos</h2>
-            </div>
+          <Card className="space-y-4 border border-border bg-card p-6">
+            <h2 className="flex items-center gap-2 font-display font-semibold">
+              <Ticket size={18} className="text-copper" /> Meus Ingressos
+            </h2>
             <div className="space-y-3">
               {tickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-2xl border border-border/70 bg-background/70 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-[rgba(167,114,74,0.12)] p-2 text-[var(--color-accent-copper)]">
-                      <Ticket size={16} />
-                    </div>
+                <div key={ticket.id} className="rounded-md border border-border p-4">
+                  <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="font-medium text-foreground">{ticket.eventTitle}</p>
-                      <p className="text-sm text-muted-foreground">Status: {ticket.status}</p>
+                      <p className="text-sm font-medium">{ticket.eventTitle}</p>
+                      <p className="text-xs text-muted-foreground">Status: {ticket.status}</p>
+                    </div>
+                    <div className="rounded-full bg-copper/20 p-2 text-copper">
+                      <Ticket size={16} />
                     </div>
                   </div>
                 </div>

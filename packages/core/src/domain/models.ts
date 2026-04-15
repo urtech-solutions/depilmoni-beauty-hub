@@ -6,6 +6,17 @@ export const DiscountTypeSchema = z.enum(["percentage", "fixed"]);
 export const PromotionScopeSchema = z.enum(["product", "category", "order", "event"]);
 export const BatchStatusSchema = z.enum(["scheduled", "active", "sold-out"]);
 export const TicketStatusSchema = z.enum(["reserved", "confirmed", "checked-in"]);
+export const DistributorStatusSchema = z.enum(["none", "pending_review", "approved", "rejected"]);
+export const OrderStatusSchema = z.enum([
+  "pending", "awaiting-payment", "paid", "processing", "shipped", "delivered", "cancelled", "refunded"
+]);
+export const InventoryMovementTypeSchema = z.enum([
+  "sale", "return", "adjustment", "restock", "reservation", "reservation-cancel"
+]);
+export const NotificationTypeSchema = z.enum([
+  "order-status", "promotion", "coupon", "xp-earned", "level-up",
+  "distributor-approved", "distributor-rejected", "event-reminder", "system"
+]);
 
 export const LinkSchema = z.object({
   label: z.string(),
@@ -60,7 +71,10 @@ export const PromotionSchema = z.object({
   endsAt: z.string(),
   active: z.boolean(),
   applicableProductIds: z.array(z.string()).default([]),
-  applicableCategories: z.array(z.string()).default([])
+  applicableCategories: z.array(z.string()).default([]),
+  xpMultiplier: z.number().positive().default(1),
+  eligibleProfiles: z.array(CustomerProfileTypeSchema).default([]),
+  eligibleTags: z.array(z.string()).default([])
 });
 
 export const CouponSchema = z.object({
@@ -73,7 +87,11 @@ export const CouponSchema = z.object({
   startsAt: z.string(),
   endsAt: z.string(),
   combinableWithPromotions: z.boolean().default(true),
-  combinableWithFidelity: z.boolean().default(true)
+  combinableWithFidelity: z.boolean().default(true),
+  maxUses: z.number().int().positive().optional(),
+  currentUses: z.number().int().nonnegative().default(0),
+  eligibleProfiles: z.array(CustomerProfileTypeSchema).default([]),
+  eligibleTags: z.array(z.string()).default([])
 });
 
 export const CustomerTagSchema = z.object({
@@ -309,32 +327,130 @@ export const OrderSchema = z.object({
   id: z.string(),
   customerId: z.string(),
   code: z.string(),
-  status: z.enum(["paid", "awaiting-payment"]),
+  status: OrderStatusSchema,
   items: z.array(OrderItemSchema),
   subtotal: z.number().nonnegative(),
   profileDiscount: z.number().nonnegative(),
   fidelityDiscount: z.number().nonnegative(),
   promotionDiscount: z.number().nonnegative(),
   couponDiscount: z.number().nonnegative(),
+  couponCode: z.string().optional(),
   shippingAmount: z.number().nonnegative(),
+  shippingAddressId: z.string().optional(),
   total: z.number().nonnegative(),
+  paymentMethod: z.enum(["credit-card", "pix"]).optional(),
+  paymentExternalId: z.string().optional(),
   xpEarned: z.number().int().nonnegative(),
-  createdAt: z.string()
+  trackingCode: z.string().optional(),
+  trackingUrl: z.string().optional(),
+  shippedAt: z.string().optional(),
+  deliveredAt: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string().optional()
 });
 
 export const CustomerProfileSchema = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string().email(),
+  phone: z.string().optional(),
+  cpf: z.string().optional(),
+  avatarUrl: z.string().optional(),
   role: RoleSchema,
   profileType: CustomerProfileTypeSchema,
+  distributorStatus: DistributorStatusSchema.default("none"),
   tags: z.array(z.string()),
   fidelityTagIds: z.array(z.string()),
   xpBalance: z.number().int().nonnegative(),
   levelId: z.string(),
   benefitsUnlocked: z.array(z.string()),
   orderIds: z.array(z.string()),
-  ticketIds: z.array(z.string())
+  ticketIds: z.array(z.string()),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional()
+});
+
+export const AddressSchema = z.object({
+  id: z.string(),
+  customerId: z.string(),
+  label: z.string().default("Principal"),
+  recipientName: z.string(),
+  street: z.string(),
+  number: z.string(),
+  complement: z.string().optional(),
+  neighborhood: z.string(),
+  city: z.string(),
+  state: z.string(),
+  zipCode: z.string(),
+  isDefault: z.boolean().default(false),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  createdAt: z.string().optional()
+});
+
+export const DistributorRequestSchema = z.object({
+  id: z.string(),
+  customerId: z.string(),
+  responsibleName: z.string(),
+  companyName: z.string(),
+  tradeName: z.string(),
+  cnpj: z.string(),
+  stateRegistration: z.string().optional(),
+  phone: z.string(),
+  commercialAddress: z.object({
+    street: z.string(),
+    number: z.string().optional(),
+    neighborhood: z.string().optional(),
+    city: z.string(),
+    state: z.string(),
+    zipCode: z.string()
+  }),
+  website: z.string().optional(),
+  socialMedia: z.string().optional(),
+  observations: z.string().optional(),
+  documents: z.array(z.string()).default([]),
+  termsAccepted: z.boolean(),
+  status: DistributorStatusSchema,
+  reviewedBy: z.string().nullable().default(null),
+  reviewedAt: z.string().nullable().default(null),
+  reviewNotes: z.string().optional(),
+  createdAt: z.string()
+});
+
+export const NotificationSchema = z.object({
+  id: z.string(),
+  customerId: z.string(),
+  type: NotificationTypeSchema,
+  title: z.string(),
+  message: z.string(),
+  href: z.string().optional(),
+  read: z.boolean().default(false),
+  createdAt: z.string()
+});
+
+export const InventoryMovementSchema = z.object({
+  id: z.string(),
+  inventoryId: z.string().optional(),
+  productId: z.string().optional(),
+  sku: z.string(),
+  type: InventoryMovementTypeSchema,
+  quantity: z.number().int(),
+  previousStock: z.number().int(),
+  newStock: z.number().int(),
+  orderId: z.string().optional(),
+  changedBy: z.string(),
+  note: z.string().optional(),
+  createdAt: z.string()
+});
+
+export const OrderStatusHistorySchema = z.object({
+  id: z.string(),
+  orderId: z.string(),
+  fromStatus: OrderStatusSchema.nullable(),
+  toStatus: OrderStatusSchema,
+  changedBy: z.string(),
+  note: z.string().optional(),
+  createdAt: z.string()
 });
 
 export const MockDatabaseSchema = z.object({
@@ -353,11 +469,20 @@ export const MockDatabaseSchema = z.object({
   banners: z.array(BannerSchema),
   landingPages: z.array(LandingPageSchema),
   blogPosts: z.array(BlogPostSchema),
-  orders: z.array(OrderSchema)
+  orders: z.array(OrderSchema),
+  addresses: z.array(AddressSchema).default([]),
+  distributorRequests: z.array(DistributorRequestSchema).default([]),
+  notifications: z.array(NotificationSchema).default([]),
+  inventoryMovements: z.array(InventoryMovementSchema).default([]),
+  orderStatusHistory: z.array(OrderStatusHistorySchema).default([])
 });
 
 export type CustomerProfileType = z.infer<typeof CustomerProfileTypeSchema>;
 export type Role = z.infer<typeof RoleSchema>;
+export type DistributorStatus = z.infer<typeof DistributorStatusSchema>;
+export type OrderStatus = z.infer<typeof OrderStatusSchema>;
+export type InventoryMovementType = z.infer<typeof InventoryMovementTypeSchema>;
+export type NotificationType = z.infer<typeof NotificationTypeSchema>;
 export type Inventory = z.infer<typeof InventorySchema>;
 export type ProductVariant = z.infer<typeof ProductVariantSchema>;
 export type Product = z.infer<typeof ProductSchema>;
@@ -370,6 +495,11 @@ export type XPLevel = z.infer<typeof XPLevelSchema>;
 export type Event = z.infer<typeof EventSchema>;
 export type Ticket = z.infer<typeof TicketSchema>;
 export type Banner = z.infer<typeof BannerSchema>;
+export type Address = z.infer<typeof AddressSchema>;
+export type DistributorRequest = z.infer<typeof DistributorRequestSchema>;
+export type Notification = z.infer<typeof NotificationSchema>;
+export type InventoryMovement = z.infer<typeof InventoryMovementSchema>;
+export type OrderStatusHistory = z.infer<typeof OrderStatusHistorySchema>;
 export type HeroBannerBlock = z.infer<typeof HeroBannerBlockSchema>;
 export type BenefitBarBlock = z.infer<typeof BenefitBarBlockSchema>;
 export type ProductCarouselBlock = z.infer<typeof ProductCarouselBlockSchema>;

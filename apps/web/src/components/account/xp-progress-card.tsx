@@ -14,41 +14,41 @@ export const XPProgressCard = ({
   nextLevel?: XPLevel;
   progress: number;
 }) => (
-  <Card className="space-y-5">
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <Badge variant="accent">Gamificacao ativa</Badge>
-        <h2 className="mt-3 flex items-center gap-2 font-display text-3xl">
-          <Award size={22} className="text-[var(--color-accent-gold)]" />
-          Nivel {level.name}
-        </h2>
+  <Card className="space-y-5 border border-border bg-card p-6">
+    <div className="mb-2 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <Award size={18} className="text-gold" />
+        <span className="font-display font-semibold">{level.name}</span>
       </div>
       <div className="text-right">
-        <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">XP atual</p>
-        <p className="mt-1 text-2xl font-semibold text-foreground">{currentXP}</p>
+        <Badge variant="accent">Gamificacao ativa</Badge>
+        <p className="mt-2 text-sm text-muted-foreground">{currentXP} XP</p>
       </div>
     </div>
 
     <div className="space-y-3">
-      <Progress value={progress} />
+      <Progress value={progress} className="bg-warm-beige" />
       {nextLevel ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Faltam {nextLevel.minXP - currentXP} XP para o nivel {nextLevel.name}.
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Nivel maximo alcancado para o MVP.
         </p>
       )}
     </div>
 
-    <div className="grid gap-2">
-      {level.benefits.map((benefit) => (
-        <div key={benefit} className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Star size={14} className="text-[var(--color-accent-gold)]" />
-          {benefit}
-        </div>
-      ))}
+    <div>
+      <p className="mb-2 text-xs font-medium">Beneficios atuais:</p>
+      <div className="grid gap-2">
+        {level.benefits.map((benefit) => (
+          <div key={benefit} className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Star size={14} className="text-gold" />
+            {benefit}
+          </div>
+        ))}
+      </div>
     </div>
   </Card>
 );

@@ -10,6 +10,13 @@ Base production-ready para o ecossistema digital da Depilmoni, com storefront pr
 - Tema visual: marrom chocolate, cobre, dourado e bege quente
 - Arquitetura: monorepo com separacao entre `domain`, `application`, `infrastructure` e `ui`
 
+## Consolidacao da base
+
+- O storefront oficial do projeto fica em `apps/web`
+- O `apps/cms` nao e uma segunda vitrine: ele e o admin do `Payload CMS`, que usa `Next.js` como shell do painel
+- A vitrine antiga feita em `Vite + React Router`, antes ativa na raiz, foi arquivada em `legacy/root-storefront-vite` para referencia visual
+- A pasta raiz agora funciona apenas como orquestradora do monorepo
+
 ## Estrutura oficial
 
 ```text
@@ -20,6 +27,8 @@ apps/
 packages/
   core/        # dominio, casos de uso, adapters, repositorios mockados e seed
   ui/          # primitives compartilhados com Tailwind + shadcn/ui
+legacy/
+  root-storefront-vite/ # storefront antigo arquivado para consulta de design
 docs/
   architecture.md
   backlog.md
@@ -79,7 +88,10 @@ cp .env.example .env
 pnpm dev
 ```
 
-Esse comando sobe `PostgreSQL + Redis` via Docker e inicia o storefront em `http://localhost:3000`.
+Esse comando sobe `PostgreSQL + Redis` via Docker e inicia:
+
+- storefront Next em `http://localhost:3000`
+- admin Payload em `http://localhost:3001`
 
 ## Portas padrao
 
@@ -93,9 +105,11 @@ Esse comando sobe `PostgreSQL + Redis` via Docker e inicia o storefront em `http
 
 ```bash
 pnpm dev
+pnpm dev:all
 pnpm dev:web
 pnpm dev:cms
 pnpm dev:commerce
+pnpm stop
 pnpm build
 pnpm lint
 pnpm test

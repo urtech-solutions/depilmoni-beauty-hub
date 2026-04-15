@@ -28,6 +28,23 @@ export const Coupons: CollectionConfig = {
     { name: "minPurchase", type: "number" },
     { name: "startsAt", type: "date", required: true },
     { name: "endsAt", type: "date", required: true },
-    { name: "active", type: "checkbox", defaultValue: true }
+    { name: "active", type: "checkbox", defaultValue: true },
+    { name: "maxUses", type: "number" },
+    { name: "currentUses", type: "number", defaultValue: 0 },
+    {
+      name: "eligibleProfiles",
+      type: "select",
+      hasMany: true,
+      options: [
+        { label: "Cliente", value: "client" },
+        { label: "Parceiro", value: "partner" },
+        { label: "Distribuidor", value: "distributor" }
+      ]
+    },
+    {
+      name: "eligibleTags",
+      type: "array",
+      fields: [{ name: "value", type: "text", required: true }]
+    }
   ]
 };

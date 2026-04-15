@@ -1,36 +1,50 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Star } from "lucide-react";
+
 import type { TestimonialSectionBlock as TestimonialSectionBlockProps } from "@depilmoni/core";
 import { Card } from "@depilmoni/ui";
+
+import { Animated, StaggerContainer, StaggerItem } from "@/components/animations/animated";
 
 export const TestimonialSection = ({
   block
 }: {
   block: TestimonialSectionBlockProps;
 }) => (
-  <section className="section-spacing">
-    <div className="container space-y-8">
-      <div className="text-center">
-        <p className="text-xs uppercase tracking-[0.32em] text-[var(--color-accent-copper)]">
-          Prova social
-        </p>
-        <h2 className="mt-3 font-display text-4xl">{block.title}</h2>
-        <p className="mt-3 text-base leading-7 text-muted-foreground">{block.subtitle}</p>
-      </div>
+  <section className="bg-secondary/30 py-16">
+    <div className="container">
+      <Animated>
+        <h2 className="mb-10 text-center font-display text-3xl font-bold">{block.title}</h2>
+        <p className="sr-only">{block.subtitle}</p>
+      </Animated>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <StaggerContainer className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {block.testimonials.map((testimonial) => (
-          <Card key={testimonial.name} className="glass-surface p-8">
-            <p className="font-display text-3xl leading-snug text-foreground">
-              “{testimonial.quote}”
-            </p>
-            <div className="mt-6">
-              <p className="font-medium text-foreground">{testimonial.name}</p>
-              <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">
-                {testimonial.role}
-              </p>
-            </div>
-          </Card>
+          <StaggerItem key={testimonial.name}>
+            <motion.div
+              whileHover={{ y: -4, boxShadow: "0 8px 30px -12px rgba(0,0,0,0.12)" }}
+              transition={{ duration: 0.25 }}
+            >
+              <Card className="rounded-xl border border-border bg-card p-6">
+                <div className="mb-3 flex gap-1">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Star key={index} size={16} className="fill-gold text-gold" />
+                  ))}
+                </div>
+                <p className="text-sm leading-relaxed text-muted-foreground italic">
+                  "{testimonial.quote}"
+                </p>
+                <div className="mt-4 border-t border-border pt-4">
+                  <p className="text-sm font-semibold">{testimonial.name}</p>
+                  <p className="text-xs text-copper">{testimonial.role}</p>
+                </div>
+              </Card>
+            </motion.div>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerContainer>
     </div>
   </section>
 );

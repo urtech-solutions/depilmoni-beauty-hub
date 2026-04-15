@@ -38,6 +38,22 @@ export const Promotions: CollectionConfig = {
     { name: "value", type: "number", required: true },
     { name: "startsAt", type: "date", required: true },
     { name: "endsAt", type: "date", required: true },
-    { name: "active", type: "checkbox", defaultValue: true }
+    { name: "active", type: "checkbox", defaultValue: true },
+    { name: "xpMultiplier", type: "number", defaultValue: 1, min: 1 },
+    {
+      name: "eligibleProfiles",
+      type: "select",
+      hasMany: true,
+      options: [
+        { label: "Cliente", value: "client" },
+        { label: "Parceiro", value: "partner" },
+        { label: "Distribuidor", value: "distributor" }
+      ]
+    },
+    {
+      name: "eligibleTags",
+      type: "array",
+      fields: [{ name: "value", type: "text", required: true }]
+    }
   ]
 };

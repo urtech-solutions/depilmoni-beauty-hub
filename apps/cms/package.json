@@ -4,18 +4,27 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "payload dev --config src/payload.config.ts",
-    "build": "tsc -p tsconfig.json --noEmit",
+    "dev": "next dev --port 3001",
+    "build": "next build --webpack",
+    "start": "next start --port 3001",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "generate:types": "payload generate:types --config src/payload.config.ts"
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.82.1",
+    "@payloadcms/next": "3.82.1",
     "@payloadcms/richtext-lexical": "3.82.1",
-    "payload": "3.82.1"
+    "graphql": "^16.10.0",
+    "next": "16.2.3",
+    "payload": "3.82.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "typescript": "^5.9.3"
   }
 }

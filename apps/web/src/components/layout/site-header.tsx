@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
-import { Button } from "@depilmoni/ui";
+import { Button, cn } from "@depilmoni/ui";
 
+import { premiumEase } from "@/components/animations/animated";
 import { useCartStore } from "@/store/cart-store";
 
 const navItems = [
@@ -23,78 +25,99 @@ export const SiteHeader = () => {
   );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-[rgba(245,237,228,0.82)] backdrop-blur-xl">
-      <div className="container flex h-20 items-center justify-between gap-4">
-        <div className="flex items-center gap-3 lg:hidden">
-          <button
-            aria-label="Abrir menu"
-            className="rounded-full border border-border/70 p-2"
-            onClick={() => setMobileOpen((open) => !open)}
-          >
-            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
-        </div>
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: premiumEase }}
+      className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md"
+    >
+      <div className="container flex h-16 items-center justify-between md:h-20">
+        <button
+          aria-label="Menu"
+          className="text-foreground md:hidden"
+          onClick={() => setMobileOpen((open) => !open)}
+        >
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
 
-        <Link href="/" className="group flex items-center gap-3">
-          <div className="rounded-full border border-[rgba(201,157,84,0.32)] bg-[rgba(255,250,245,0.72)] px-3 py-1">
-            <span className="text-[10px] uppercase tracking-[0.38em] text-[var(--color-accent-copper)]">
-              Depilmoni
-            </span>
-          </div>
-          <div className="hidden sm:block">
-            <p className="font-display text-2xl leading-none text-gradient-metallic">Beauty Hub</p>
-            <p className="text-xs uppercase tracking-[0.34em] text-muted-foreground">
-              e-commerce premium
-            </p>
-          </div>
+        <Link href="/" className="flex items-center gap-2">
+          <motion.span
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+            className="font-display text-2xl font-bold tracking-tight text-gradient-gold"
+          >
+            Depilmoni
+          </motion.span>
         </Link>
 
-        <nav className="hidden items-center gap-7 lg:flex">
-          {navItems.map((item) => (
-            <Link
+        <nav className="hidden items-center gap-8 md:flex">
+          {navItems.map((item, index) => (
+            <motion.div
               key={item.href}
-              href={item.href}
-              className="text-sm text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 + index * 0.05, ease: premiumEase }}
             >
-              {item.label}
-            </Link>
+              <Link
+                href={item.href}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            </motion.div>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" aria-label="Buscar">
-            <Search size={18} />
+          <Button variant="ghost" size="icon" aria-label="Buscar" className="hidden md:inline-flex">
+            <Search size={20} />
           </Button>
-          <Link href="/minha-conta">
-            <Button variant="ghost" size="icon" aria-label="Minha conta">
-              <User size={18} />
-            </Button>
-          </Link>
-          <Link href="/carrinho">
-            <Button variant="ghost" size="icon" className="relative" aria-label="Carrinho">
-              <ShoppingBag size={18} />
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-accent-copper)] px-1 text-[10px] font-semibold text-white">
+          <Button asChild variant="ghost" size="icon" aria-label="Minha conta">
+            <Link href="/minha-conta">
+              <User size={20} />
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="icon" className="relative" aria-label="Carrinho">
+            <Link href="/carrinho">
+              <ShoppingBag size={20} />
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
                 {cartCount}
               </span>
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {mobileOpen ? (
-        <nav className="container flex flex-col gap-4 border-t border-border/60 py-5 lg:hidden">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-sm text-[var(--color-text-secondary)]"
-              onClick={() => setMobileOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
-    </header>
+      <AnimatePresence>
+        {mobileOpen ? (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: premiumEase }}
+            className={cn("overflow-hidden border-t border-border/50 md:hidden")}
+          >
+            <nav className="container flex flex-col gap-4 py-4">
+              {navItems.map((item, index) => (
+                <motion.div
+                  key={item.href}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05, ease: premiumEase }}
+                >
+                  <Link
+                    href={item.href}
+                    className="text-base font-medium text-muted-foreground hover:text-foreground"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                </motion.div>
+              ))}
+            </nav>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </motion.header>
   );
 };
