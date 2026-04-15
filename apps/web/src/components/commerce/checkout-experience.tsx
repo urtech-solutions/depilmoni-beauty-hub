@@ -1,15 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import type { ChangeEvent } from "react";
 
-import type { CheckoutResult } from "@depilmoni/core";
+import type { Address, CheckoutResult } from "@depilmoni/core";
 import { Badge, Button, Card, Input } from "@depilmoni/ui";
 
 import { formatCurrency } from "@/lib/format";
-import { defaultSessionCustomerId } from "@/lib/storefront";
+import { useAuthStore } from "@/store/auth-store";
 import { cartSubtotal, useCartStore } from "@/store/cart-store";
+
+type CouponValidationState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "valid"; discount: number; code: string }
+  | { status: "invalid"; message: string };
 
 type ShippingOption = {
   id: string;
@@ -20,21 +27,67 @@ type ShippingOption = {
 };
 
 export const CheckoutExperience = () => {
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const items = useCartStore((state) => state.items);
   const clear = useCartStore((state) => state.clear);
   const subtotal = cartSubtotal(items);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | undefined>();
   const [shippingPostalCode, setShippingPostalCode] = useState("01310-100");
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [selectedShippingId, setSelectedShippingId] = useState<string>();
   const [couponCode, setCouponCode] = useState("BEMVINDA10");
+  const [couponValidation, setCouponValidation] = useState<CouponValidationState>({ status: "idle" });
   const [paymentMethod, setPaymentMethod] = useState<"credit-card" | "pix">("credit-card");
   const [attendeeName, setAttendeeName] = useState("Maria Silva");
-  const [customerName, setCustomerName] = useState("Maria Silva");
-  const [customerEmail, setCustomerEmail] = useState("maria@depilmoni.test");
+  const [customerName, setCustomerName] = useState(user?.name ?? "Maria Silva");
+  const [customerEmail, setCustomerEmail] = useState(user?.email ?? "maria@depilmoni.test");
   const [loadingShipping, setLoadingShipping] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [result, setResult] = useState<CheckoutResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setCustomerName(user.name);
+      setCustomerEmail(user.email);
+      setAttendeeName(user.name);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setAddresses([]);
+      setSelectedAddressId(undefined);
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const response = await fetch("/api/customer/addresses", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as { addresses?: Address[] };
+        if (cancelled || !data.addresses) return;
+        setAddresses(data.addresses);
+        const defaultAddress = data.addresses.find((address) => address.isDefault) ?? data.addresses[0];
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress.id);
+          setShippingPostalCode(defaultAddress.zipCode);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const selectedShipping = useMemo(
     () => shippingOptions.find((option) => option.id === selectedShippingId),
@@ -89,35 +142,91 @@ export const CheckoutExperience = () => {
     }
   };
 
+  const validateCouponNow = async () => {
+    if (!user || !couponCode.trim()) {
+      setCouponValidation({ status: "idle" });
+      return;
+    }
+
+    setCouponValidation({ status: "loading" });
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode.trim(), subtotal })
+      });
+      const data = (await response.json()) as
+        | { valid: true; discount: number; code: string }
+        | { valid: false; message: string };
+
+      if ("valid" in data && data.valid) {
+        setCouponValidation({ status: "valid", discount: data.discount, code: data.code });
+      } else {
+        setCouponValidation({
+          status: "invalid",
+          message: "message" in data ? data.message : "Cupom inválido"
+        });
+      }
+    } catch {
+      setCouponValidation({ status: "invalid", message: "Falha ao validar cupom" });
+    }
+  };
+
   const submitCheckout = async () => {
     setLoadingCheckout(true);
     setError(null);
 
+    if (!user) {
+      setError("Faça login para concluir o pedido.");
+      setLoadingCheckout(false);
+      router.push("/login?next=/checkout");
+      return;
+    }
+
     try {
-      const response = await fetch("/api/mock/checkout", {
+      const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerId: defaultSessionCustomerId,
           items: orderItems,
-          couponCode,
+          addressId: selectedAddressId,
+          couponCode: couponCode || undefined,
+          shippingAmount: selectedShipping?.amount ?? 0,
           shippingMethodId: selectedShipping?.id,
-          shippingPostalCode,
           paymentMethod,
           attendeeName
         })
       });
 
-      const data = (await response.json()) as CheckoutResult | { error: string };
+      const data = (await response.json()) as {
+        error?: string;
+        order?: {
+          id: string;
+          code: string;
+          total: number;
+          xpEarned: number;
+          leveledUp: boolean;
+          level: string | null;
+        };
+      };
 
-      if (!response.ok || "error" in data) {
-        throw new Error("error" in data ? data.error : "Falha ao concluir checkout.");
+      if (!response.ok || !data.order) {
+        throw new Error(data.error ?? "Falha ao concluir checkout.");
       }
 
-      setResult(data);
       clear();
+      const qs = new URLSearchParams({
+        code: data.order.code,
+        orderId: data.order.id,
+        total: String(data.order.total),
+        xp: String(data.order.xpEarned),
+        ...(data.order.level ? { level: data.order.level } : {})
+      });
+      router.push(`/checkout/sucesso?${qs.toString()}`);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Erro inesperado no checkout.");
+      const reason = cause instanceof Error ? cause.message : "Erro inesperado no checkout.";
+      setError(reason);
+      router.push(`/checkout/falha?reason=${encodeURIComponent(reason)}`);
     } finally {
       setLoadingCheckout(false);
     }
@@ -240,6 +349,47 @@ export const CheckoutExperience = () => {
           </div>
         </Card>
 
+        {user && addresses.length > 0 ? (
+          <Card className="space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-[var(--color-accent-copper)]">
+                Endereços salvos
+              </p>
+              <h2 className="mt-2 font-display text-2xl">Selecione a entrega</h2>
+            </div>
+            <div className="space-y-3">
+              {addresses.map((address) => (
+                <button
+                  key={address.id}
+                  onClick={() => {
+                    setSelectedAddressId(address.id);
+                    setShippingPostalCode(address.zipCode);
+                  }}
+                  className={`w-full rounded-2xl border p-4 text-left transition-colors ${
+                    selectedAddressId === address.id
+                      ? "border-[var(--color-accent-copper)] bg-[rgba(167,114,74,0.08)]"
+                      : "border-border/70 bg-background/70"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium text-foreground">{address.label}</p>
+                    {address.isDefault ? (
+                      <span className="text-xs uppercase tracking-[0.24em] text-[var(--color-accent-copper)]">
+                        padrão
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {address.street}, {address.number}
+                    {address.complement ? ` — ${address.complement}` : ""} • {address.neighborhood},{" "}
+                    {address.city}/{address.state} — {address.zipCode}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </Card>
+        ) : null}
+
         <Card className="space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-end">
             <div className="flex-1">
@@ -283,11 +433,28 @@ export const CheckoutExperience = () => {
 
         <Card className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <Input
-              value={couponCode}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => setCouponCode(event.target.value.toUpperCase())}
-              placeholder="Cupom"
-            />
+            <div>
+              <Input
+                value={couponCode}
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                  setCouponCode(event.target.value.toUpperCase());
+                  setCouponValidation({ status: "idle" });
+                }}
+                onBlur={validateCouponNow}
+                placeholder="Cupom"
+              />
+              {couponValidation.status === "loading" ? (
+                <p className="mt-2 text-xs text-muted-foreground">Validando cupom…</p>
+              ) : null}
+              {couponValidation.status === "valid" ? (
+                <p className="mt-2 text-xs text-[var(--color-accent-copper)]">
+                  {couponValidation.code} aplicado — desconto de {formatCurrency(couponValidation.discount)}
+                </p>
+              ) : null}
+              {couponValidation.status === "invalid" ? (
+                <p className="mt-2 text-xs text-red-600">{couponValidation.message}</p>
+              ) : null}
+            </div>
             <Input
               value={attendeeName}
               onChange={(event: ChangeEvent<HTMLInputElement>) => setAttendeeName(event.target.value)}

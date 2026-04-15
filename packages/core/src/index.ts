@@ -4,6 +4,8 @@ export * from "./application/pricing";
 export * from "./application/checkout";
 export * from "./application/storefront";
 export * from "./application/auth.service";
+export * from "./application/coupon.service";
+export * from "./application/xp.service";
 export * from "./infrastructure/adapters";
 export * from "./infrastructure/memory/mock-database";
 export * from "./infrastructure/repositories/mock-repositories";
