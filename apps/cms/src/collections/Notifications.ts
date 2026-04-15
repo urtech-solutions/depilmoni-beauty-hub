@@ -10,7 +10,7 @@ export const Notifications: CollectionConfig = {
   access: {
     read: ({ req }) => {
       if (!req.user) return false;
-      const user = req.user as { role?: string; id?: string; collection?: string };
+      const user = req.user as unknown as { role?: string; id?: string | number; collection?: string };
       if (user.role && ["admin", "manager"].includes(user.role)) return true;
       if (user.collection === "customers") return { customer: { equals: user.id } };
       return false;
@@ -18,7 +18,7 @@ export const Notifications: CollectionConfig = {
     create: isAdmin,
     update: ({ req }) => {
       if (!req.user) return false;
-      const user = req.user as { role?: string; id?: string; collection?: string };
+      const user = req.user as unknown as { role?: string; id?: string | number; collection?: string };
       if (user.role && ["admin", "manager"].includes(user.role)) return true;
       if (user.collection === "customers") return { customer: { equals: user.id } };
       return false;

@@ -14,9 +14,7 @@
     "verbatimModuleSyntax": true,
     "baseUrl": ".",
     "paths": {
-      "@depilmoni/domain": ["packages/domain/src/index.ts"],
-      "@depilmoni/application": ["packages/application/src/index.ts"],
-      "@depilmoni/infrastructure": ["packages/infrastructure/src/index.ts"],
+      "@depilmoni/core": ["packages/core/src/index.ts"],
       "@depilmoni/ui": ["packages/ui/src/index.ts"]
     }
   }

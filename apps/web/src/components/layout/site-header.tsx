@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
-import { useState } from "react";
+import { Bell, Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { Button, cn } from "@depilmoni/ui";
 
 import { premiumEase } from "@/components/animations/animated";
+import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
 
 const navItems = [
@@ -20,9 +21,43 @@ const navItems = [
 
 export const SiteHeader = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const cartCount = useCartStore((state) =>
     state.items.reduce((total, item) => total + item.quantity, 0)
   );
+  const user = useAuthStore((state) => state.user);
+  const accountHref = user ? "/minha-conta" : "/login";
+  const accountLabel = user ? `Olá, ${user.name.split(" ")[0]}` : "Minha conta";
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const refreshNotifications = async () => {
+      try {
+        const response = await fetch("/api/notifications/unread-count", { cache: "no-store" });
+        const json = (await response.json()) as { count?: number };
+        if (response.ok) {
+          setUnreadCount(json.count ?? 0);
+        }
+      } catch {
+        setUnreadCount(0);
+      }
+    };
+
+    void refreshNotifications();
+
+    const onRefresh = () => {
+      void refreshNotifications();
+    };
+
+    window.addEventListener("depilmoni-notifications-updated", onRefresh);
+    return () => {
+      window.removeEventListener("depilmoni-notifications-updated", onRefresh);
+    };
+  }, [user]);
 
   return (
     <motion.header
@@ -72,8 +107,20 @@ export const SiteHeader = () => {
           <Button variant="ghost" size="icon" aria-label="Buscar" className="hidden md:inline-flex">
             <Search size={20} />
           </Button>
-          <Button asChild variant="ghost" size="icon" aria-label="Minha conta">
-            <Link href="/minha-conta">
+          {user ? (
+            <Button asChild variant="ghost" size="icon" className="relative" aria-label="Notificações">
+              <Link href="/minha-conta/notificacoes">
+                <Bell size={20} />
+                {unreadCount ? (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-accent-copper)] px-1 text-[10px] font-bold text-white">
+                    {unreadCount}
+                  </span>
+                ) : null}
+              </Link>
+            </Button>
+          ) : null}
+          <Button asChild variant="ghost" size="icon" aria-label={accountLabel} title={accountLabel}>
+            <Link href={accountHref}>
               <User size={20} />
             </Link>
           </Button>

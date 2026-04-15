@@ -8,12 +8,48 @@ export const Customers: CollectionConfig = {
   admin: {
     useAsTitle: "name"
   },
+  hooks: {
+    beforeDelete: [
+      async ({ id, req }) => {
+        const customerId = String(id);
+        const payload = req.payload;
+        const relatedCollections = [
+          "notifications",
+          "xp-transactions",
+          "distributor-requests",
+          "orders",
+          "addresses"
+        ] as const;
+
+        for (const collection of relatedCollections) {
+          const result = await payload.find({
+            collection,
+            where: {
+              customer: {
+                equals: customerId
+              }
+            },
+            limit: 200,
+            overrideAccess: true
+          });
+
+          for (const doc of result.docs) {
+            await payload.delete({
+              collection,
+              id: doc.id,
+              overrideAccess: true
+            });
+          }
+        }
+      }
+    ]
+  },
   access: {
     read: publicRead,
     create: () => true,
     update: ({ req }) => {
       if (!req.user) return false;
-      const user = req.user as { role?: string; id?: string; collection?: string };
+      const user = req.user as unknown as { role?: string; id?: string | number; collection?: string };
       if (user.role && ["admin", "manager"].includes(user.role)) return true;
       if (user.collection === "customers") return { id: { equals: user.id } };
       return false;
