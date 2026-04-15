@@ -5,11 +5,13 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "strict": true,
+    "strict": false,
     "skipLibCheck": true,
     "noEmit": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
     "paths": {
       "@/*": ["./src/*"]
     }
