@@ -6,7 +6,9 @@ export const Customers: CollectionConfig = {
   slug: "customers",
   auth: true,
   admin: {
-    useAsTitle: "name"
+    useAsTitle: "name",
+    defaultColumns: ["name", "email", "profileType", "distributorStatus", "xpBalance", "updatedAt"],
+    listSearchableFields: ["name", "email", "cpf", "phone"]
   },
   hooks: {
     beforeDelete: [
@@ -99,6 +101,30 @@ export const Customers: CollectionConfig = {
       name: "level",
       type: "relationship",
       relationTo: "xp-levels"
+    },
+    {
+      name: "ordersHistory",
+      type: "join",
+      collection: "orders",
+      on: "customer",
+      defaultLimit: 10,
+      defaultSort: "-createdAt"
+    },
+    {
+      name: "xpHistory",
+      type: "join",
+      collection: "xp-transactions",
+      on: "customer",
+      defaultLimit: 10,
+      defaultSort: "-createdAt"
+    },
+    {
+      name: "distributorRequestsHistory",
+      type: "join",
+      collection: "distributor-requests",
+      on: "customer",
+      defaultLimit: 10,
+      defaultSort: "-createdAt"
     },
     {
       name: "benefitsUnlocked",

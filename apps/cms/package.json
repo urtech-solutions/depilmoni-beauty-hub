@@ -7,7 +7,7 @@
     "dev": "next dev --port 3001",
     "build": "next build --webpack",
     "start": "next start --port 3001",
-    "lint": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.lint.json --noEmit",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
     "seed:admin": "node --env-file=../../.env --import tsx src/seed/seed-admin.ts"
@@ -20,7 +20,8 @@
     "next": "16.2.3",
     "payload": "3.82.1",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "redis": "^5.12.1"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",

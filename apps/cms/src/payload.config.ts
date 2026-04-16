@@ -31,7 +31,13 @@ export default buildConfig({
   secret: process.env.PAYLOAD_SECRET ?? "depilmoni-payload-secret",
   editor: lexicalEditor(),
   admin: {
-    user: Users.slug
+    user: Users.slug,
+    importMap: {
+      baseDir: dirname
+    },
+    components: {
+      afterDashboard: ["./components/dashboard/manager-dashboard#ManagerDashboard"]
+    }
   },
   collections: [
     Users,

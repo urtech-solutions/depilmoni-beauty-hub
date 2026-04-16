@@ -1,11 +1,32 @@
 import type { CollectionConfig } from "payload";
 
 import { canManageCommerce } from "../access";
+import { syncDistributorApprovalState } from "../lib/admin-dashboard";
 
 export const DistributorRequests: CollectionConfig = {
   slug: "distributor-requests",
   admin: {
     useAsTitle: "companyName"
+  },
+  hooks: {
+    afterChange: [
+      async ({ doc, previousDoc, req, operation, context }) => {
+        if (context?.skipDistributorSync) {
+          return doc;
+        }
+
+        if (operation === "create" || doc.status !== previousDoc?.status) {
+          await syncDistributorApprovalState({
+            payload: req.payload,
+            request: doc,
+            previousStatus: previousDoc?.status,
+            currentUser: req.user
+          });
+        }
+
+        return doc;
+      }
+    ]
   },
   access: {
     read: ({ req }) => {
@@ -70,9 +91,27 @@ export const DistributorRequests: CollectionConfig = {
     {
       name: "reviewedBy",
       type: "relationship",
-      relationTo: "users"
+      relationTo: "users",
+      admin: {
+        condition: (_, siblingData) =>
+          ["approved", "rejected"].includes(String(siblingData?.status ?? ""))
+      }
     },
-    { name: "reviewedAt", type: "date" },
-    { name: "reviewNotes", type: "textarea" }
+    {
+      name: "reviewedAt",
+      type: "date",
+      admin: {
+        condition: (_, siblingData) =>
+          ["approved", "rejected"].includes(String(siblingData?.status ?? ""))
+      }
+    },
+    {
+      name: "reviewNotes",
+      type: "textarea",
+      admin: {
+        condition: (_, siblingData) =>
+          ["approved", "rejected"].includes(String(siblingData?.status ?? ""))
+      }
+    }
   ]
 };

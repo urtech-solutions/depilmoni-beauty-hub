@@ -5,7 +5,9 @@ import { canManageCommerce, publicRead } from "../access";
 export const Products: CollectionConfig = {
   slug: "products",
   admin: {
-    useAsTitle: "name"
+    useAsTitle: "name",
+    defaultColumns: ["name", "category", "featured", "active", "updatedAt"],
+    listSearchableFields: ["name", "slug", "category", "variants.sku"]
   },
   access: {
     read: publicRead,
@@ -31,8 +33,17 @@ export const Products: CollectionConfig = {
         { name: "basePrice", type: "number", required: true },
         { name: "partnerPrice", type: "number" },
         { name: "distributorPrice", type: "number" },
-        { name: "stock", type: "number", required: true }
+        { name: "stock", type: "number", required: true },
+        { name: "reorderLevel", type: "number", defaultValue: 5 }
       ]
+    },
+    {
+      name: "inventoryHistory",
+      type: "join",
+      collection: "inventory-movements",
+      on: "product",
+      defaultLimit: 20,
+      defaultSort: "-createdAt"
     }
   ]
 };

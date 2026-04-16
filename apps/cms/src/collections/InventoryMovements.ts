@@ -5,7 +5,9 @@ import { canManageCommerce } from "../access";
 export const InventoryMovements: CollectionConfig = {
   slug: "inventory-movements",
   admin: {
-    useAsTitle: "sku"
+    useAsTitle: "sku",
+    defaultColumns: ["sku", "type", "quantity", "previousStock", "newStock", "createdAt"],
+    listSearchableFields: ["sku", "type", "changedBy", "note"]
   },
   access: {
     read: canManageCommerce,

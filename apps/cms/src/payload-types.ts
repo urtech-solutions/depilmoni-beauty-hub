@@ -91,7 +91,16 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    customers: {
+      ordersHistory: 'orders';
+      xpHistory: 'xp-transactions';
+      distributorRequestsHistory: 'distributor-requests';
+    };
+    products: {
+      inventoryHistory: 'inventory-movements';
+    };
+  };
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
@@ -216,6 +225,21 @@ export interface Customer {
   fidelityTags?: (number | FidelityTag)[] | null;
   xpBalance?: number | null;
   level?: (number | null) | XpLevel;
+  ordersHistory?: {
+    docs?: (number | Order)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  xpHistory?: {
+    docs?: (number | XpTransaction)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  distributorRequestsHistory?: {
+    docs?: (number | DistributorRequest)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   benefitsUnlocked?:
     | {
         value: string;
@@ -296,6 +320,117 @@ export interface XpLevel {
         id?: string | null;
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  customer: number | Customer;
+  code: string;
+  status: 'pending' | 'awaiting-payment' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+  items:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  subtotal: number;
+  profileDiscount?: number | null;
+  fidelityDiscount?: number | null;
+  promotionDiscount?: number | null;
+  couponDiscount?: number | null;
+  couponCode?: string | null;
+  shippingAmount?: number | null;
+  shippingAddress?: (number | null) | Address;
+  total: number;
+  paymentMethod?: ('credit-card' | 'pix') | null;
+  paymentExternalId?: string | null;
+  xpEarned?: number | null;
+  trackingCode?: string | null;
+  trackingUrl?: string | null;
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "addresses".
+ */
+export interface Address {
+  id: number;
+  customer: number | Customer;
+  label?: string | null;
+  recipientName: string;
+  street: string;
+  number: string;
+  complement?: string | null;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  isDefault?: boolean | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "xp-transactions".
+ */
+export interface XpTransaction {
+  id: number;
+  customer: number | Customer;
+  amount: number;
+  source: 'order-paid' | 'event-ticket' | 'manual-adjustment';
+  referenceId?: string | null;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "distributor-requests".
+ */
+export interface DistributorRequest {
+  id: number;
+  customer: number | Customer;
+  responsibleName: string;
+  companyName: string;
+  tradeName: string;
+  cnpj: string;
+  stateRegistration?: string | null;
+  phone: string;
+  commercialAddress: {
+    street: string;
+    number?: string | null;
+    neighborhood?: string | null;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  website?: string | null;
+  socialMedia?: string | null;
+  observations?: string | null;
+  documents?:
+    | {
+        file: number | Media;
+        id?: string | null;
+      }[]
+    | null;
+  termsAccepted: boolean;
+  status: 'pending_review' | 'approved' | 'rejected';
+  reviewedBy?: (number | null) | User;
+  reviewedAt?: string | null;
+  reviewNotes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -535,9 +670,33 @@ export interface Product {
         partnerPrice?: number | null;
         distributorPrice?: number | null;
         stock: number;
+        reorderLevel?: number | null;
         id?: string | null;
       }[]
     | null;
+  inventoryHistory?: {
+    docs?: (number | InventoryMovement)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "inventory-movements".
+ */
+export interface InventoryMovement {
+  id: number;
+  product?: (number | null) | Product;
+  sku: string;
+  type: 'sale' | 'return' | 'adjustment' | 'restock' | 'reservation' | 'reservation-cancel';
+  quantity: number;
+  previousStock?: number | null;
+  newStock?: number | null;
+  order?: (number | null) | Order;
+  changedBy?: string | null;
+  note?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -640,117 +799,6 @@ export interface BlogPost {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "addresses".
- */
-export interface Address {
-  id: number;
-  customer: number | Customer;
-  label?: string | null;
-  recipientName: string;
-  street: string;
-  number: string;
-  complement?: string | null;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  isDefault?: boolean | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders".
- */
-export interface Order {
-  id: number;
-  customer: number | Customer;
-  code: string;
-  status: 'pending' | 'awaiting-payment' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
-  items:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  subtotal: number;
-  profileDiscount?: number | null;
-  fidelityDiscount?: number | null;
-  promotionDiscount?: number | null;
-  couponDiscount?: number | null;
-  couponCode?: string | null;
-  shippingAmount?: number | null;
-  shippingAddress?: (number | null) | Address;
-  total: number;
-  paymentMethod?: ('credit-card' | 'pix') | null;
-  paymentExternalId?: string | null;
-  xpEarned?: number | null;
-  trackingCode?: string | null;
-  trackingUrl?: string | null;
-  shippedAt?: string | null;
-  deliveredAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "distributor-requests".
- */
-export interface DistributorRequest {
-  id: number;
-  customer: number | Customer;
-  responsibleName: string;
-  companyName: string;
-  tradeName: string;
-  cnpj: string;
-  stateRegistration?: string | null;
-  phone: string;
-  commercialAddress: {
-    street: string;
-    number?: string | null;
-    neighborhood?: string | null;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
-  website?: string | null;
-  socialMedia?: string | null;
-  observations?: string | null;
-  documents?:
-    | {
-        file: number | Media;
-        id?: string | null;
-      }[]
-    | null;
-  termsAccepted: boolean;
-  status: 'pending_review' | 'approved' | 'rejected';
-  reviewedBy?: (number | null) | User;
-  reviewedAt?: string | null;
-  reviewNotes?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "xp-transactions".
- */
-export interface XpTransaction {
-  id: number;
-  customer: number | Customer;
-  amount: number;
-  source: 'order-paid' | 'event-ticket' | 'manual-adjustment';
-  referenceId?: string | null;
-  description?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "notifications".
  */
 export interface Notification {
@@ -770,24 +818,6 @@ export interface Notification {
   message: string;
   href?: string | null;
   read?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "inventory-movements".
- */
-export interface InventoryMovement {
-  id: number;
-  product?: (number | null) | Product;
-  sku: string;
-  type: 'sale' | 'return' | 'adjustment' | 'restock' | 'reservation' | 'reservation-cancel';
-  quantity: number;
-  previousStock?: number | null;
-  newStock?: number | null;
-  order?: (number | null) | Order;
-  changedBy?: string | null;
-  note?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -983,6 +1013,9 @@ export interface CustomersSelect<T extends boolean = true> {
   fidelityTags?: T;
   xpBalance?: T;
   level?: T;
+  ordersHistory?: T;
+  xpHistory?: T;
+  distributorRequestsHistory?: T;
   benefitsUnlocked?:
     | T
     | {
@@ -1259,8 +1292,10 @@ export interface ProductsSelect<T extends boolean = true> {
         partnerPrice?: T;
         distributorPrice?: T;
         stock?: T;
+        reorderLevel?: T;
         id?: T;
       };
+  inventoryHistory?: T;
   updatedAt?: T;
   createdAt?: T;
 }

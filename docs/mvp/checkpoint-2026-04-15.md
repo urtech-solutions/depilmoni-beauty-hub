@@ -87,30 +87,40 @@ Saída esperada na primeira execução: `[seed-admin] Admin criado: admin@depilm
 - **Lint do web** roda sem depender de `.next/types` gerados previamente
 - **Build do web** validado com todas as rotas da Sprint 3
 
-## 6. O que falta (Sprint 3+)
+## 6. O que funciona hoje
 
-- Checkout real (gravar Order, decrementar estoque, conceder XP)
-- Dashboard customizado no admin com métricas
+- **Sprint 4 entregue**: checkout real persiste `Orders`, gera `XPTransactions`, grava `InventoryMovements`, incrementa cupom e renderiza páginas de sucesso/falha
+- **Sprint 5 concluída** com portal gerencial funcional no Payload
+- **Dashboard admin** mostra métricas de receita, ticket médio, top compradores, últimas compras, promoções/cupons ativos, estoque baixo e solicitações pendentes
+- **APIs admin protegidas** em `/api/admin/dashboard/metrics` e `/api/admin/xp/ranking`, acessíveis apenas para `admin` e `manager`
+- **Fluxo de distribuidor no admin** agora é automático: alterar status da solicitação atualiza o `Customer`, registra `reviewedAt/reviewedBy` e cria `Notification`
+- **Ponto de reposição por variante** disponível em `products.variants.reorderLevel`
+- **Histórico gerencial no próprio admin**: o documento de `Customer` mostra joins de pedidos, XP e solicitações; o de `Product` mostra join de movimentações de estoque
+- **Lint do CMS estabilizado** com [apps/cms/tsconfig.lint.json](../../apps/cms/tsconfig.lint.json), sem depender de `.next/types`
+- **Cache admin validado em Redis real** com fallback local transparente em [apps/cms/src/lib/admin-cache.ts](../../apps/cms/src/lib/admin-cache.ts)
+
+## 7. O que falta
+
 - Webhook Mercado Pago
 - Mapa de clientes geolocalizado
 - Notificações em tempo real
 - Upload de avatar/documentos via `Media` para o fluxo do portal
 - Lookup opcional de CEP (ViaCEP)
 
-## 7. Ponto de retomada
+## 8. Ponto de retomada
 
-**Sprint atual concluída**: Sprint 3.
+**Sprint atual**: Sprint 6 — Fulfillment + Mapa + Notificações.
 
-**Próxima sprint**: Sprint 4 — Checkout real + Estoque + XP.
+**Status do bloco anterior**: Sprint 5 entregue e validada com dashboard, APIs admin, ranking de XP, histórico gerencial, aprovação/rejeição automática de distribuidores e cache em Redis.
 
-**Primeiro bloco recomendado ao retomar**:
+**Próximo bloco recomendado ao retomar**:
 
-1. Conectar `/checkout` ao Payload real com `Orders`, `InventoryMovements` e `XPTransactions`.
-2. Persistir `addressId` do usuário no checkout e validar cupom por perfil/tag.
-3. Criar páginas `/checkout/sucesso` e `/checkout/falha`.
-4. Iniciar `inventory.service.ts` e `xp.service.ts` em `packages/core/src/application/`.
+1. Implementar fulfillment no admin com tracking e timestamps de envio/entrega.
+2. Disparar notificações automáticas de pedido enviado/entregue.
+3. Exibir tracking no portal do cliente.
+4. Iniciar webhook sandbox do Mercado Pago.
 
-## 8. Como rodar localmente
+## 9. Como rodar localmente
 
 ```bash
 nvm use 22                   # Node 22 obrigatório
