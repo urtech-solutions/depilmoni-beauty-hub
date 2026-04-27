@@ -2,10 +2,62 @@ import type { CollectionConfig } from "payload";
 
 import { isAdmin } from "../access";
 
+const geocodeCache = new Map<string, { lat: number; lon: number }>();
+
+const geocodeAddress = async (doc: Record<string, unknown>): Promise<{ lat: number; lon: number } | null> => {
+  const cep = String(doc.zipCode ?? "").replace(/\D/g, "");
+  if (!cep || cep.length < 8) return null;
+
+  const cached = geocodeCache.get(cep);
+  if (cached) return cached;
+
+  try {
+    const query = encodeURIComponent(`${doc.street}, ${doc.number}, ${doc.city}, ${doc.state}, Brazil`);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`,
+      { headers: { "User-Agent": "Depilmoni/1.0" } }
+    );
+
+    if (!res.ok) return null;
+
+    const results = (await res.json()) as { lat: string; lon: string }[];
+    if (results.length === 0) return null;
+
+    const coords = { lat: parseFloat(results[0].lat), lon: parseFloat(results[0].lon) };
+    geocodeCache.set(cep, coords);
+    return coords;
+  } catch {
+    return null;
+  }
+};
+
 export const Addresses: CollectionConfig = {
   slug: "addresses",
   admin: {
     useAsTitle: "label"
+  },
+  hooks: {
+    afterChange: [
+      async ({ doc, req, operation }) => {
+        if (doc.latitude && doc.longitude) return doc;
+
+        const coords = await geocodeAddress(doc);
+        if (!coords) return doc;
+
+        try {
+          await req.payload.update({
+            collection: "addresses",
+            id: doc.id as string | number,
+            data: { latitude: coords.lat, longitude: coords.lon },
+            context: { skipGeocode: true }
+          });
+        } catch {
+          // best-effort
+        }
+
+        return doc;
+      }
+    ]
   },
   access: {
     read: ({ req }) => {

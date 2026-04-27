@@ -153,6 +153,23 @@ export default async function PedidoDetalhePage({
               <p className="mt-2">Entregue em {formatDate(order.deliveredAt)}</p>
             ) : null}
           </div>
+
+          {order.trackingCode ? (
+            <div className="rounded-[22px] border border-copper/30 bg-secondary p-4">
+              <p className="text-xs uppercase tracking-[0.28em] text-muted-foreground">Rastreio</p>
+              <p className="mt-2 font-mono text-lg font-semibold text-foreground">{order.trackingCode}</p>
+              {order.trackingUrl ? (
+                <a
+                  href={order.trackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block text-sm font-medium text-[var(--color-accent-copper)] underline underline-offset-4"
+                >
+                  Acompanhar entrega
+                </a>
+              ) : null}
+            </div>
+          ) : null}
         </Card>
       </div>
     </div>

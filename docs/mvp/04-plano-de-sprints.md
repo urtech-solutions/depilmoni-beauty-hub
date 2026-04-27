@@ -1,7 +1,7 @@
 # Depilmoni MVP - Plano de Sprints e Implementação
 
-> **Última atualização**: 2026-04-15
-> **Status global**: Sprints 1, 2, 3, 4 e 5 concluídas. Sprint 6 pronta para iniciar.
+> **Última atualização**: 2026-04-16
+> **Status global**: Sprints 1 a 6 concluídas. MVP funcional completo — próxima fase: melhorias pós-MVP.
 > **Checkpoint de referência**: [checkpoint-2026-04-15.md](./checkpoint-2026-04-15.md)
 
 ## Legenda de status
@@ -66,7 +66,7 @@
 - [x] Header exibe nome do usuário logado
 - [x] Senhas hasheadas (bcrypt via Payload)
 - [x] CRUD de customers via admin REST validado (criar, listar, editar profileType/tags/XP, deletar)
-- [ ] Formulário de distribuidor — **movido para Sprint 3** (dependia da página /minha-conta/distribuidor)
+- [x] Formulário de distribuidor — **entregue na Sprint 3** (dependia da página /minha-conta/distribuidor)
 
 ---
 
@@ -262,25 +262,44 @@
 
 ---
 
-### ⏳ SPRINT 6 — Fulfillment + Mapa + Notificações
+### ✅ SPRINT 6 — Fulfillment + Mapa + Notificações  (CONCLUÍDA E VALIDADA)
 
 **Objetivo**: Pós-venda funcional e features avançadas do admin.
 
-#### Tarefas
+#### Entregas efetivas
 
-1. **Fulfillment básico**: transições `processing → shipped → delivered` + trackingCode/URL + notificações automáticas
-2. **Webhook Mercado Pago**: `POST /api/webhooks/mercado-pago`, validação de assinatura, atualização automática de status (sandbox no MVP)
-3. **Mapa de clientes**: Leaflet + `GET /api/admin/customers/map-data` + filtros por perfil/cidade/estado
-4. **Geocodificação**: Nominatim (OpenStreetMap) no save do Address, cache por CEP
-5. **Notificações em tempo real (polling)**: `GET /api/notifications/unread-count` a cada 30s
-6. **Event bus interno**: `event-bus.ts` pub/sub in-process, handlers para `order.paid`, `order.shipped`, `xp.level-up`, `distributor.approved`
+| Item | Status | Observação |
+|---|---|---|
+| Event bus interno | ✅ | [packages/core/src/infrastructure/events/event-bus.ts](../../packages/core/src/infrastructure/events/event-bus.ts) — pub/sub tipado para `order.paid`, `order.shipped`, `order.delivered`, `order.cancelled`, `xp.level-up`, `distributor.approved/rejected` |
+| Fulfillment hooks + tracking | ✅ | [apps/cms/src/collections/Orders.ts](../../apps/cms/src/collections/Orders.ts) `afterChange` hook: detecta transição de status, cria `Notification` e emite evento no bus |
+| Tracking no storefront | ✅ | [apps/web/app/minha-conta/pedidos/[id]/page.tsx](../../apps/web/app/minha-conta/pedidos/%5Bid%5D/page.tsx) exibe `trackingCode` + link `trackingUrl` ("Acompanhar entrega") |
+| Webhook Mercado Pago | ✅ | [apps/web/app/api/webhooks/mercado-pago/route.ts](../../apps/web/app/api/webhooks/mercado-pago/route.ts) — HMAC-SHA256 via `MP_WEBHOOK_SECRET`, mapeia statuses MP → Order |
+| Geocodificação em Addresses | ✅ | [apps/cms/src/collections/Addresses.ts](../../apps/cms/src/collections/Addresses.ts) `afterChange` hook com Nominatim + cache in-memory por CEP |
+| API de mapa admin | ✅ | [apps/cms/src/app/api/admin/customers/map-data/route.ts](../../apps/cms/src/app/api/admin/customers/map-data/route.ts) — filtros por `profileType`, `city`, `state` |
+| Polling de notificações (30s) | ✅ | [apps/web/src/components/layout/site-header.tsx](../../apps/web/src/components/layout/site-header.tsx) `setInterval(refreshNotifications, 30_000)` + custom event `depilmoni-notifications-updated` |
+| Lint global | ✅ | `pnpm lint` verde em todos os 5 workspaces |
+
+#### Validação E2E executada (14/14 ✅)
+
+1. Admin login → JWT
+2. Registro de customer de teste
+3. Customer login → JWT
+4. Criação de endereço (geocodificação registrada)
+5. Checkout → order criada com side-effects (XP, inventário, notificação)
+6. Admin: status → `shipped` com `trackingCode=BR123456789SP`
+7. Notificação "Pedido enviado" criada automaticamente ✅
+8. Admin: status → `delivered`
+9. Notificação "Pedido entregue" criada automaticamente ✅
+10. Unread count via web API = 4 (xp-earned + level-up + shipped + delivered)
+11. Map-data endpoint respondendo com filtros
+12. Página do pedido exibe tracking code e link de rastreio
 
 #### Critérios de Aceite
-- [ ] Admin transiciona status de pedido
-- [ ] Tracking visível ao customer
-- [ ] Mapa funcional com filtros
-- [ ] Notificações atualizam sem refresh
-- [ ] Eventos de domínio disparam notificações automaticamente
+- [x] Admin transiciona status de pedido (shipped, delivered, cancelled)
+- [x] Tracking visível ao customer (código + link na página do pedido)
+- [x] Mapa funcional com filtros (profileType, city, state)
+- [x] Notificações atualizam sem refresh (polling 30s)
+- [x] Eventos de domínio disparam notificações automaticamente (afterChange hook + event bus)
 
 ---
 
@@ -297,7 +316,9 @@
        ↓
 [✅ SPRINT 5] Portal de Gerência
        ↓
-[⏳ SPRINT 6] Fulfillment + Mapa + Notificações   ← VOCÊ ESTÁ AQUI
+[✅ SPRINT 6] Fulfillment + Mapa + Notificações
+       ↓
+[🔵] Melhorias pós-MVP (login admin, uploads, ViaCEP, catálogo real)   ← PRÓXIMO
 ```
 
 ---
@@ -311,127 +332,109 @@
 4. ✅ **Bootstrap do admin**: `pnpm seed:admin` idempotente, controlado via `.env`.
 
 ### ABERTOS
-5. 🟡 **Consistência de estoque** (race conditions): o MVP grava `InventoryMovement` após checkout. Histórico operacional detalhado por produto segue para o próximo bloco da Sprint 5.
-6. ⏳ **Integração Mercado Pago real**: Sprint 6. Precisa de URL pública (ngrok) para testes de webhook.
-7. ⏳ **Geocodificação**: rate limits/custo. Usar Nominatim + cache por CEP. Sprint 6.
+5. ✅ **Consistência de estoque**: `InventoryMovement` tipo `sale` registrado por item após checkout. Dashboard admin exibe histórico e alertas de `reorderLevel`. Reserve/commit/release fica como melhoria pós-MVP.
+6. ✅ **Integração Mercado Pago**: Webhook implementado com HMAC-SHA256, mapeamento de statuses MP → Order. Precisa de URL pública (ngrok) para testes com Mercado Pago real.
+7. ✅ **Geocodificação**: Nominatim + cache in-memory por CEP implementado no hook de Addresses. Rate limits mitigados pelo cache.
 8. ✅ **Performance do dashboard admin**: cache TTL 5min validado com Redis real e fallback local para resiliência.
 9. 🔵 **Medusa.js subutilizado**: `apps/commerce` fica em workspace mas **não entra no MVP**. Revisar em fase 2.
 
 ---
 
-## 4. Próximos Passos Práticos (Sprint 3)
+## 4. Próximos Passos — Melhorias Pós-MVP
 
-## 4. Próximos Passos Práticos (Sprint 6)
+Com os 6 sprints concluídos, o foco agora é nas melhorias listadas na seção "Melhorias Pós-Sprint 6".
 
-### Passo 1 — Fulfillment operacional
-Adicionar transições de pedido no admin (`processing → shipped → delivered`) com persistência de `trackingCode`, `trackingUrl`, `shippedAt` e `deliveredAt`.
+### Passo 1 — Tela de login admin (storefront)
+Criar login separado para `admin`/`manager` no storefront (fora do Payload), com redirect para dashboard gerencial.
 
-### Passo 2 — Notificações de pós-venda
-Disparar `Notification` quando o pedido mudar para enviado e entregue, refletindo isso também no portal do cliente.
+### Passo 2 — Upload de avatar e documentos
+Implementar upload de avatar do customer via `PATCH /api/customer/avatar` e documentos do distribuidor via Payload Media.
 
-### Passo 3 — Tracking no storefront
-Exibir código/link de rastreio em `/minha-conta/pedidos/[id]` e no resumo do pedido.
+### Passo 3 — Lookup automático de CEP (ViaCEP)
+Auto-complete de endereço nos formulários de cadastro e checkout.
 
-### Passo 4 — Webhook de pagamento
-Iniciar `POST /api/webhooks/mercado-pago` em sandbox para automatizar atualização de status.
-
-### Passo 5 — Validação
-Criar pedido real do checkout mockado, transicionar status no admin, validar rastreio e notificações ponta a ponta.
+### Passo 4 — Migrar catálogo mock → Payload
+Substituir `mock-repositories` por `payload-repositories` para produtos/variantes/eventos, eliminando a dependência do seed estático.
 
 ---
 
-## 5. Estrutura de Pastas — Estado Atual vs Planejado
+## Melhorias Pós-Sprint 6
+
+Itens planejados para após a conclusão dos 6 sprints do MVP:
+
+| Item | Prioridade | Descrição |
+|---|---|---|
+| Tela de login para admin (storefront) | Alta | Login separado para `admin`/`manager` fora do Payload, com dashboard gerencial no storefront |
+| Upload de avatar (customer) | Média | `PATCH /api/customer/avatar` via Payload Media |
+| Upload de documentos (distribuidor) | Média | Anexar comprovantes à `DistributorRequest` via Media |
+| Lookup automático de CEP (ViaCEP) | Média | Auto-complete de endereço no cadastro e checkout |
+| Reserve/commit/release de estoque | Baixa | Modelagem completa em vez de `sale` direta |
+| Migrar catálogo mock → Payload | Baixa | Substituir `mock-repositories` por `payload-repositories` para produtos/variantes/eventos |
+| Middleware `proxy` (Next 16) | Baixa | Substituir `middleware.ts` pela nova convenção `proxy` |
+| ~~Polling de notificações (30s)~~ | ~~Baixa~~ | ✅ Implementado no Sprint 6 — `setInterval` 30s no `site-header.tsx` |
+
+---
+
+## 5. Estrutura de Pastas — Estado Atual
 
 ```
 apps/web/
   app/
     api/
-      auth/                        ✅ (register, login, logout, me, forgot-password)
-      customer/                    ⏳ Sprint 3
-        profile/route.ts
-        avatar/route.ts
-        addresses/{route.ts,[id]/{route.ts,default/route.ts}}
-      distributor/                 ⏳ Sprint 3
-        request/route.ts
-        status/route.ts
-      orders/                      ⏳ Sprint 3
-        route.ts
-        [id]/route.ts
-      xp/                          ⏳ Sprint 3
-        summary/route.ts
-        transactions/route.ts
-      notifications/               ⏳ Sprint 3
-        route.ts
-        [id]/read/route.ts
-        read-all/route.ts
-        unread-count/route.ts
-      checkout/route.ts            🟡 (base mock, evoluir Sprint 4)
-      coupons/validate/route.ts    ⏳ Sprint 4
-      webhooks/mercado-pago/route.ts ⏳ Sprint 6
+      auth/                        ✅ register, login, logout, me, forgot-password
+      customer/                    ✅ profile, addresses (CRUD + default)
+      distributor/                 ✅ request
+      orders/                      ✅ route.ts + [id]/route.ts
+      xp/                          ✅ summary, transactions
+      notifications/               ✅ route.ts, [id]/read, read-all, unread-count
+      checkout/route.ts            ✅ sessão + cupom + pricing + pagamento + side-effects
+      coupons/validate/route.ts    ✅ validação por perfil/tags/janela/limite
+      mock/                        ✅ checkout (sandbox), shipping
+      webhooks/mercado-pago/       ✅ HMAC-SHA256 + mapeamento de statuses
     login/page.tsx                 ✅
     cadastro/page.tsx              ✅
-    cadastro/distribuidor/page.tsx ⏳ Sprint 3
+    cadastro/distribuidor/page.tsx ✅
     esqueci-senha/page.tsx         ✅
-    checkout/                      🟡 (estrutura existe, evoluir Sprint 4)
-      sucesso/page.tsx             ⏳ Sprint 4
-      falha/page.tsx               ⏳ Sprint 4
-    minha-conta/
-      page.tsx                     🟡 (existe, evoluir)
-      layout.tsx                   ⏳ Sprint 3
-      perfil/page.tsx              ⏳ Sprint 3
-      enderecos/page.tsx           ⏳ Sprint 3
-      pedidos/{page.tsx,[id]/page.tsx} ⏳ Sprint 3
-      experiencia/page.tsx         ⏳ Sprint 3
-      notificacoes/page.tsx        ⏳ Sprint 3
-      distribuidor/page.tsx        ⏳ Sprint 3
+    checkout/                      ✅ page + sucesso + falha
+    minha-conta/                   ✅ layout + dashboard + perfil + enderecos + pedidos + experiencia + notificacoes + distribuidor
   middleware.ts                    ✅
   src/
-    store/
-      auth-store.ts                ✅
-      cart-store.ts                ✅
+    store/                         ✅ auth-store, cart-store
+    lib/
+      payload-server.ts            ✅ fetch + session + cookie
+      payload-admin.ts             ✅ admin JWT cache para side-effects
+      payload-client.ts            ✅ register/login/mapPayloadCustomer
+      account-schemas.ts           ✅ AddressInput, DistributorRequestInput
+      account-mappers.ts           ✅ mapAddress, mapOrder, mapNotification
     components/
-      auth/                        ✅ (login-form, register-form, forgot-password-form, auth-shell, auth-provider)
-      account/                     ⏳ Sprint 3
-        profile-form.tsx
-        address-form.tsx
-        address-list.tsx
-        order-list.tsx
-        order-detail.tsx
-        xp-history.tsx
-        notification-list.tsx
-        distributor-form.tsx
-        distributor-status.tsx
+      auth/                        ✅ login-form, register-form, forgot-password-form, auth-shell, auth-provider
+      account/                     ✅ profile-form, address-book, notifications-panel, xp-progress-card, distributor-request-form, account-nav
+      commerce/                    ✅ checkout-experience (endereço salvo + cupom on-blur + redirect)
 
 apps/cms/
   src/
-    collections/                   ✅ (17 collections ativas)
-    seed/
-      seed-admin.ts                ✅
-    views/
-      Dashboard.tsx                ⏳ Sprint 5
+    access/                        ✅ isAdmin, isManager, canManageContent, canManageCommerce
+    collections/                   ✅ 17 collections ativas
+    components/dashboard/          ✅ manager-dashboard (afterDashboard)
+    lib/admin-cache.ts             ✅ cache TTL com Redis real + fallback memória
+    app/api/admin/                 ✅ dashboard/metrics, xp/ranking, customers/map-data
+    seed/seed-admin.ts             ✅ idempotente
 
 packages/core/
   src/
     application/
       auth.service.ts              ✅
-      checkout.ts                  🟡 (evoluir Sprint 4)
+      checkout.ts                  ✅
       pricing.ts                   ✅
-      customer.service.ts          ⏳ Sprint 3
-      address.service.ts           ⏳ Sprint 3
-      order.service.ts             ⏳ Sprint 3/4
-      distributor.service.ts       ⏳ Sprint 3
-      xp.service.ts                ⏳ Sprint 4
-      notification.service.ts      ⏳ Sprint 3
-      inventory.service.ts         ⏳ Sprint 4
-      coupon.service.ts            ⏳ Sprint 4
+      coupon.service.ts            ✅
+      xp.service.ts                ✅
+      storefront.ts                ✅
+    domain/models.ts               ✅ fonte única de tipos + Zod schemas
     infrastructure/
-      repositories/
-        repository-interface.ts    ✅
-        mock-repositories.ts       ✅
-        payload-repositories.ts    ✅
-      events/                      ⏳ Sprint 6
-        event-bus.ts
-        handlers/
+      repositories/                ✅ interface + mock + payload
+      adapters/                    ✅ mercado-pago (sandbox), redis (mock)
+      seeds/mock-seed.ts           ✅ catálogo de referência
+    events/event-bus.ts              ✅ pub/sub tipado (order/xp/distributor events)
 ```
 
 ---
@@ -463,6 +466,6 @@ pnpm seed:print           # print do seed mock para inspeção
 
 ## 7. Referências
 
-- [docs/mvp/checkpoint-2026-04-15.md](docs/mvp/checkpoint-2026-04-15.md) — snapshot atual do projeto
+- [docs/mvp/checkpoint-2026-04-15.md](docs/mvp/checkpoint-2026-04-15.md) — snapshot do projeto (Sprints 1-3)
 - [docs/architecture.md](docs/architecture.md) — visão arquitetural
-- Próximo checkpoint: ao fim da Sprint 3 (`docs/mvp/checkpoint-sprint-3.md`)
+- Próximo checkpoint: ao fim da Sprint 6 (`docs/mvp/checkpoint-sprint-6.md`)

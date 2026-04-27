@@ -1,11 +1,77 @@
 import type { CollectionConfig } from "payload";
 
+import { eventBus } from "@depilmoni/core";
+
 import { canManageCommerce } from "../access";
+
+const fulfillmentStatusMessages: Record<string, { title: string; messageFn: (code: string) => string }> = {
+  shipped: {
+    title: "Pedido enviado",
+    messageFn: (code) => `Seu pedido ${code} foi enviado. Acompanhe o rastreio na central.`
+  },
+  delivered: {
+    title: "Pedido entregue",
+    messageFn: (code) => `Seu pedido ${code} foi entregue. Esperamos que goste!`
+  },
+  cancelled: {
+    title: "Pedido cancelado",
+    messageFn: (code) => `Seu pedido ${code} foi cancelado.`
+  }
+};
 
 export const Orders: CollectionConfig = {
   slug: "orders",
   admin: {
     useAsTitle: "code"
+  },
+  hooks: {
+    afterChange: [
+      async ({ doc, previousDoc, req, operation }) => {
+        if (operation !== "update") return doc;
+        const newStatus = doc.status as string;
+        const oldStatus = previousDoc?.status as string | undefined;
+        if (!oldStatus || newStatus === oldStatus) return doc;
+
+        const customerId = typeof doc.customer === "object" ? String(doc.customer.id) : String(doc.customer);
+        const orderId = String(doc.id);
+        const orderCode = String(doc.code);
+
+        const statusMsg = fulfillmentStatusMessages[newStatus];
+        if (statusMsg) {
+          try {
+            await req.payload.create({
+              collection: "notifications",
+              data: {
+                customer: doc.customer,
+                type: "order-status",
+                title: statusMsg.title,
+                message: statusMsg.messageFn(orderCode),
+                href: `/minha-conta/pedidos/${orderId}`,
+                read: false
+              }
+            });
+          } catch (error) {
+            console.error("[orders hook] failed to create notification:", error);
+          }
+        }
+
+        if (newStatus === "shipped") {
+          await eventBus.emit("order.shipped", {
+            orderId,
+            customerId,
+            orderCode,
+            trackingCode: doc.trackingCode as string | undefined,
+            trackingUrl: doc.trackingUrl as string | undefined
+          });
+        } else if (newStatus === "delivered") {
+          await eventBus.emit("order.delivered", { orderId, customerId, orderCode });
+        } else if (newStatus === "cancelled") {
+          await eventBus.emit("order.cancelled", { orderId, customerId, orderCode });
+        }
+
+        return doc;
+      }
+    ]
   },
   access: {
     read: ({ req }) => {

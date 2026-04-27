@@ -10,3 +10,4 @@ export * from "./infrastructure/adapters";
 export * from "./infrastructure/memory/mock-database";
 export * from "./infrastructure/repositories/mock-repositories";
 export * from "./infrastructure/seeds/mock-seed";
+export * from "./infrastructure/events/event-bus";

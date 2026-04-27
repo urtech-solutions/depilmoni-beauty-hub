@@ -14,6 +14,9 @@ importers:
 
   apps/cms:
     dependencies:
+      '@depilmoni/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@payloadcms/db-postgres':
         specifier: 3.82.1
         version: 3.82.1(@opentelemetry/api@1.9.1)(knex@3.2.8(pg@8.16.3))(payload@3.82.1(graphql@16.13.2)(typescript@5.9.3))

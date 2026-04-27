@@ -49,12 +49,15 @@ export const SiteHeader = () => {
 
     void refreshNotifications();
 
+    const interval = setInterval(refreshNotifications, 30_000);
+
     const onRefresh = () => {
       void refreshNotifications();
     };
 
     window.addEventListener("depilmoni-notifications-updated", onRefresh);
     return () => {
+      clearInterval(interval);
       window.removeEventListener("depilmoni-notifications-updated", onRefresh);
     };
   }, [user]);
